@@ -1,0 +1,36 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: user-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+        hibernate:
+          format_sql: true
+server:
+  port: 8082
+encryption:
+ secret-key-base64: ${SECRET_KEY_BASE64}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER}
+
+services:
+  auth:
+    url: ${AUTH_SERVICE_URL}
+
+internal:
+   api-key: change-me-in-production
