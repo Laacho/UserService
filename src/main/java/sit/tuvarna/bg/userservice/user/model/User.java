@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import sit.tuvarna.bg.userservice.addresses.model.Address;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,6 +51,9 @@ public class User {
 
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
+    private Address address;
 
     @Column(name = "last_login")
     private LocalDate lastLogin;

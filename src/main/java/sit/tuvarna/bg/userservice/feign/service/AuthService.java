@@ -2,7 +2,6 @@ package sit.tuvarna.bg.userservice.feign.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sit.tuvarna.bg.userservice.config.InternalApiKeyProperties;
 import sit.tuvarna.bg.userservice.feign.client.AuthClient;
 import sit.tuvarna.bg.userservice.user.model.User;
 import sit.tuvarna.bg.userservice.web.dto.request.IssueRequest;
@@ -14,12 +13,10 @@ import java.util.Set;
 public class AuthService {
 
     private final AuthClient authClient;
-    private final InternalApiKeyProperties props;
 
     @Autowired
-    public AuthService(AuthClient authClient, InternalApiKeyProperties props) {
+    public AuthService(AuthClient authClient) {
         this.authClient = authClient;
-        this.props = props;
     }
 
     public TokenPairResponse issueTokens(User user) {
@@ -30,6 +27,6 @@ public class AuthService {
                 .roles(Set.of(user.getRole().name()))
                 .build();
 
-        return authClient.issue(props.getApiKey(),request);
+        return authClient.issue(request);
     }
 }

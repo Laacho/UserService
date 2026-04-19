@@ -15,6 +15,7 @@ import sit.tuvarna.bg.userservice.web.dto.request.RegisterRequest;
 import sit.tuvarna.bg.userservice.web.dto.response.TokenPairResponse;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -76,5 +77,11 @@ public class UserService {
         userRepository.save(user);
 
         return authService.issueTokens(user);
+    }
+
+    public UUID resolveUserId(String username){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username"));
+        return user.getId();
     }
 }
