@@ -1,4 +1,4 @@
-package sit.tuvarna.bg.userservice.addresses.model;
+package sit.tuvarna.bg.userservice.userSettings.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,24 +15,27 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "addresses")
-public class Address {
+@Table(name = "user_settings")
+public class UserSettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    private AddressType addressType;
+    private boolean emailNotificationEnabled;
+    private boolean internalNotificationEnabled;
 
-    private String country;
-    private String city;
-    private String street;
-    private String postalCode;
+    private boolean twoFactorEnabled;
+
+    @Enumerated(EnumType.STRING)
+    private TwoFactorMethod twoFactorMethod;
+
+    @Column(name = "two_factor_secret")
+    private String twoFactorSecret; // encrypted
 
     @CreationTimestamp
     private LocalDateTime createdAt;

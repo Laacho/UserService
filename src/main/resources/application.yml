@@ -31,6 +31,3 @@ security:
 services:
   auth:
     url: ${AUTH_SERVICE_URL}
-
-internal:
-   api-key: change-me-in-production

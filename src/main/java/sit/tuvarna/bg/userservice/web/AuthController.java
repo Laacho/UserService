@@ -1,4 +1,4 @@
-package sit.tuvarna.bg.userservice.web.dto;
+package sit.tuvarna.bg.userservice.web;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
