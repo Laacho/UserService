@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sit.tuvarna.bg.userservice.aop.Loggable;
 import sit.tuvarna.bg.userservice.config.EncryptionService;
+import sit.tuvarna.bg.userservice.exception.*;
 import sit.tuvarna.bg.userservice.user.model.User;
 import sit.tuvarna.bg.userservice.user.repository.UserRepository;
 import sit.tuvarna.bg.userservice.userSettings.model.TwoFactorMethod;
@@ -69,17 +70,17 @@ public class UserSettingsService {
     @Loggable
     public String getTwoFactorSecret(UUID userId) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("User settings not found"));
+                .orElseThrow(() -> new UserNotFoundException("User settings not found for user '" + userId + "'"));
 
         if (settings.getTwoFactorSecret() == null)
-            throw new IllegalStateException("2FA secret not set");
+            throw new InvalidOperationException("Two-factor authentication secret not configured for this user");
 
         return encryptionService.decrypt(settings.getTwoFactorSecret());
     }
     @Loggable
     public void enableTwoFactor(UUID userId) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("User settings not found"));
+                .orElseThrow(() -> new UserNotFoundException("User settings not found for user '" + userId + "'"));
 
         settings.setTwoFactorEnabled(true);
         userSettingsRepository.save(settings);
@@ -97,7 +98,7 @@ public class UserSettingsService {
     @Loggable
     private UserSettings createDefaultSettings(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found!"));
+                .orElseThrow(() -> new UserNotFoundException("User with id '" + userId + "' not found"));
         UserSettings settings = UserSettings.builder()
                 .user(user)
                 .emailNotificationEnabled(false)

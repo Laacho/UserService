@@ -2,6 +2,7 @@ package sit.tuvarna.bg.userservice.config;
 
 import org.springframework.stereotype.Service;
 import sit.tuvarna.bg.userservice.aop.Loggable;
+import sit.tuvarna.bg.userservice.exception.InvalidOperationException;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -43,8 +44,8 @@ public class EncryptionService {
             System.arraycopy(ciphertext, 0, ivAndCiphertext, iv.length, ciphertext.length);
 
             return Base64.getEncoder().encodeToString(ivAndCiphertext);
-        }catch (Exception e){
-            throw new RuntimeException("Encryption failed", e);
+        } catch (Exception e) {
+            throw new InvalidOperationException("Encryption failed", e);
         }
     }
     @Loggable
@@ -53,7 +54,7 @@ public class EncryptionService {
             byte[] ivAndCiphertext = Base64.getDecoder().decode(base64IvAndCiphertext);
 
             if (ivAndCiphertext.length < IV_LENGTH_BYTES + 16) {
-                throw new IllegalArgumentException("Invalid encrypted payload");
+                throw new InvalidOperationException("Invalid encrypted payload");
             }
 
             byte[] iv = new byte[IV_LENGTH_BYTES];
@@ -68,8 +69,10 @@ public class EncryptionService {
 
             byte[] plaintextBytes = cipher.doFinal(ciphertext);
             return new String(plaintextBytes, StandardCharsets.UTF_8);
+        } catch (InvalidOperationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
+            throw new InvalidOperationException("Decryption failed", e);
         }
     }
 }

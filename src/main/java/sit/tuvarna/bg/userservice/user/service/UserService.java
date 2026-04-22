@@ -1,10 +1,12 @@
 package sit.tuvarna.bg.userservice.user.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import sit.tuvarna.bg.userservice.aop.Loggable;
+import sit.tuvarna.bg.userservice.exception.*;
 import sit.tuvarna.bg.userservice.feign.service.AuthService;
 import sit.tuvarna.bg.userservice.user.model.Roles;
 import sit.tuvarna.bg.userservice.user.model.Status;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -42,14 +45,13 @@ public class UserService {
     public TokenPairResponse register(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            //todo handle errors correctly
-            throw new IllegalArgumentException("Username already exists");
+            throw new ResourceAlreadyExistsException("Username '" + request.getUsername() + "' already exists");
         }
-        //todo maybe add a email validation
+
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         EgnValidationResult result = EgnValidator.validate(request.getEgn());
         if (!result.isValid()) {
-            throw new IllegalArgumentException("Invalid EGN");
+            throw new InvalidOperationException("Invalid EGN provided");
         }
         String hashedEgn = passwordEncoder.encode(request.getEgn());
         LocalDate birthDate = result.getBirthDate();
@@ -77,10 +79,10 @@ public class UserService {
     @Loggable
     public TokenPairResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
         }
         user.setLastLogin(LocalDate.now());
         userRepository.save(user);
@@ -90,14 +92,13 @@ public class UserService {
     @Loggable
     public UUID resolveUserId(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid username"));
+                .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
         return user.getId();
     }
     @Loggable
     public void linkAccount(UUID userId, UUID accountId) {
         User user = userRepository.findById(userId)
-                //todo when adding the error handling this should return 404
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id '" + userId + "' not found"));
 
         List<UUID> accountIds = user.getAccountIds();
         if (!accountIds.contains(accountId)) {
@@ -110,12 +111,12 @@ public class UserService {
     public List<UUID> getAllAccounts(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            throw new RuntimeException("Invalid Authorization header");
+            throw new InvalidOperationException("Invalid or missing Authorization header");
         }
         String token = header.substring(7);
         UUID userId = jwtValidator.extractUserId(token);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id '" + userId + "' not found"));
         return user.getAccountIds();
 
     }
@@ -125,6 +126,7 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
             //log user not found
+            log.error("User with id '{}' not found when validating account '{}'", userId, accountId);
             return false;
         }
         User user = optionalUser.get();
@@ -137,7 +139,7 @@ public class UserService {
     @Loggable
     public void deleteAccount(UUID userId, UUID accountId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id '" + userId + "' not found"));
         List<UUID> accountIds = user.getAccountIds();
         accountIds.removeIf(id -> id.equals(accountId));
         userRepository.save(user);
