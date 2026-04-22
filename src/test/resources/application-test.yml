@@ -20,7 +20,7 @@ server:
   port: 8082
 
 encryption:
-  secret-key-base64: dGVzdF9zZWNyZXRfa2V5X2Jhc2U2NF8xMjM0NTY3ODkwYWJjZGVmZ2hpams=
+  secret-key-base64: 91r3J6Kw4GTOT9FU0mYw88q1/h5T+FP/XR7VPoLSctM=
 
 management:
   endpoints:
