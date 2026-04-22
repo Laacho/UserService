@@ -1,0 +1,39 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+server:
+  port: 8082
+
+encryption:
+  secret-key-base64: dGVzdF9zZWNyZXRfa2V5X2Jhc2U2NF8xMjM0NTY3ODkwYWJjZGVmZ2hpams=
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+security:
+  jwt:
+    secret: test_jwt_secret_key_1234567890abcdefghijklmnopqrstuvwxyz
+    issuer: test-issuer
+
+services:
+  auth:
+    url: http://localhost:8081
+
