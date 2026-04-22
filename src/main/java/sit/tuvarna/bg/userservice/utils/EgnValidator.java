@@ -2,6 +2,7 @@ package sit.tuvarna.bg.userservice.utils;
 
 
 import lombok.extern.slf4j.Slf4j;
+import sit.tuvarna.bg.userservice.aop.Loggable;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -23,6 +24,7 @@ public class EgnValidator {
 
     private static final int[] WEIGHTS = {2, 4, 8, 5, 10, 9, 7, 3, 6};
 
+    @Loggable
     public static EgnValidationResult validate(String egn) {
         if (egn == null) {
             log.error("egn is null");

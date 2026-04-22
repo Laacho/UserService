@@ -2,6 +2,7 @@ package sit.tuvarna.bg.userservice.userSettings.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sit.tuvarna.bg.userservice.aop.Loggable;
 import sit.tuvarna.bg.userservice.config.EncryptionService;
 import sit.tuvarna.bg.userservice.user.model.User;
 import sit.tuvarna.bg.userservice.user.repository.UserRepository;
@@ -26,6 +27,7 @@ public class UserSettingsService {
         this.encryptionService = encryptionService;
     }
 
+    @Loggable
     public UserSettingsResponse updateSettings(UUID userId, UserSettingsUpdateRequest request) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultSettings(userId));
@@ -45,6 +47,7 @@ public class UserSettingsService {
         userSettingsRepository.save(settings);
         return toResponse(settings);
     }
+    @Loggable
     public void storeTwoFactorSecret(UUID userId, String rawSecret) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultSettings(userId));
@@ -57,11 +60,13 @@ public class UserSettingsService {
 
         userSettingsRepository.save(settings);
     }
+    @Loggable
     public UserSettingsResponse getSettings(UUID userId){
         UserSettings settings = userSettingsRepository.findById(userId)
                 .orElseGet(() -> createDefaultSettings(userId));
         return toResponse(settings);
     }
+    @Loggable
     public String getTwoFactorSecret(UUID userId) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("User settings not found"));
@@ -71,7 +76,7 @@ public class UserSettingsService {
 
         return encryptionService.decrypt(settings.getTwoFactorSecret());
     }
-
+    @Loggable
     public void enableTwoFactor(UUID userId) {
         UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("User settings not found"));
@@ -89,6 +94,7 @@ public class UserSettingsService {
                 .build();
     }
 
+    @Loggable
     private UserSettings createDefaultSettings(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found!"));
