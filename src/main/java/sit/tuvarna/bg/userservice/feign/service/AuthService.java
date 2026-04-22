@@ -2,6 +2,7 @@ package sit.tuvarna.bg.userservice.feign.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sit.tuvarna.bg.userservice.aop.Loggable;
 import sit.tuvarna.bg.userservice.feign.client.AuthClient;
 import sit.tuvarna.bg.userservice.user.model.User;
 import sit.tuvarna.bg.userservice.web.dto.request.IssueRequest;
@@ -19,6 +20,7 @@ public class AuthService {
         this.authClient = authClient;
     }
 
+    @Loggable
     public TokenPairResponse issueTokens(User user) {
 
         IssueRequest request = IssueRequest.builder()

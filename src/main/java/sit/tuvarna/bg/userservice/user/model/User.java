@@ -8,6 +8,7 @@ import sit.tuvarna.bg.userservice.addresses.model.Address;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -54,6 +55,8 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     private Address address;
+
+    private List<UUID> accountIds;
 
     @Column(name = "last_login")
     private LocalDate lastLogin;

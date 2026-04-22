@@ -8,10 +8,12 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import sit.tuvarna.bg.userservice.aop.Loggable;
 
 import javax.crypto.SecretKey;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -23,6 +25,7 @@ public class JwtValidator {
     @Value("${security.jwt.issuer}")
     private String issuer;
 
+    @Loggable
     public Claims validate(String token) {
         try {
             return Jwts.parser()
@@ -42,8 +45,17 @@ public class JwtValidator {
         return type !=null && type.equals("access");
     }
 
-    public String extractUserId(Claims claims) {
-        return claims.get("userId", String.class);
+    public Claims parseAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey())
+                .requireIssuer(issuer)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public UUID extractUserId(String  token) {
+        return UUID.fromString(parseAllClaims(token).get("userId").toString());
     }
 
     public String extractUsername(Claims claims) {

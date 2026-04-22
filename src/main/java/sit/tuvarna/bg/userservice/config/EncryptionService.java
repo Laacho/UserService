@@ -1,6 +1,7 @@
 package sit.tuvarna.bg.userservice.config;
 
 import org.springframework.stereotype.Service;
+import sit.tuvarna.bg.userservice.aop.Loggable;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,7 +25,7 @@ public class EncryptionService {
         this.secretKey = secretKey;
     }
 
-
+    @Loggable
     public String encrypt(String plainText) {
         try{
             byte[] iv = new byte[IV_LENGTH_BYTES];
@@ -46,6 +47,7 @@ public class EncryptionService {
             throw new RuntimeException("Encryption failed", e);
         }
     }
+    @Loggable
     public String decrypt(String base64IvAndCiphertext) {
         try {
             byte[] ivAndCiphertext = Base64.getDecoder().decode(base64IvAndCiphertext);
