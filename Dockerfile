@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
-COPY target/UserService-0.0.1-SNAPSHOT.jar user-service.jar
+COPY target/user-service-0.0.1-SNAPSHOT.jar user-service.jar
 EXPOSE 8082
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

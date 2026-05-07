@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>sit.tuvarna.bg</groupId>
-	<artifactId>UserService</artifactId>
+	<artifactId>user-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>UserService</name>
 	<description>UserService</description>
