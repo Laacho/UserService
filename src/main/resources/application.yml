@@ -13,8 +13,23 @@ spring:
     properties:
         hibernate:
           format_sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+        enable.idempotence: true
+        acks: all
+        retries: 3
 server:
   port: 8082
+
+app:
+  kafka:
+    topics:
+      user-events: user-events
 encryption:
  secret-key-base64: ${SECRET_KEY_BASE64}
 
@@ -31,3 +46,11 @@ security:
 services:
   auth:
     url: ${AUTH_SERVICE_URL}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

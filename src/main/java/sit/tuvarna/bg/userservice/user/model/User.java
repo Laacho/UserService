@@ -6,8 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import sit.tuvarna.bg.userservice.addresses.model.Address;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,13 +58,22 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     private Address address;
 
-    private List<UUID> accountIds;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_account_ids", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "account_id")
+    @Builder.Default
+    private List<UUID> accountIds = new ArrayList<>();
 
     @Column(name = "last_login")
     private LocalDate lastLogin;
 
     @Column(name = "last_password_change")
     private LocalDate lastPasswordChange;
+
+    // Refresh tokens issued before this instant are rejected on refresh.
+    // Bumped on password change to invalidate all other sessions.
+    @Column(name = "tokens_valid_from")
+    private Instant tokensValidFrom;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -1,5 +1,6 @@
 package sit.tuvarna.bg.userservice.user.repository;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import sit.tuvarna.bg.userservice.user.model.User;
@@ -12,4 +13,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByUsername(String username);
     Optional<User> findByUsername(String username);
+    boolean existsById(@NotNull UUID id);
 }

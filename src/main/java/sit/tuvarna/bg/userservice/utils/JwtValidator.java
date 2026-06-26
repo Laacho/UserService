@@ -55,7 +55,11 @@ public class JwtValidator {
     }
 
     public UUID extractUserId(String  token) {
-        return UUID.fromString(parseAllClaims(token).get("userId").toString());
+        Object userId = parseAllClaims(token).get("userId");
+        if (userId == null) {
+            throw new JwtException("Missing 'userId' claim in token");
+        }
+        return UUID.fromString(userId.toString());
     }
 
     public String extractUsername(Claims claims) {

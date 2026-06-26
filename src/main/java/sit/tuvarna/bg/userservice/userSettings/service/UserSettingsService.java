@@ -2,9 +2,12 @@ package sit.tuvarna.bg.userservice.userSettings.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sit.tuvarna.bg.userservice.aop.Loggable;
 import sit.tuvarna.bg.userservice.config.EncryptionService;
 import sit.tuvarna.bg.userservice.exception.*;
+import sit.tuvarna.bg.userservice.kafka.UserEventPublisher;
+import sit.tuvarna.bg.userservice.kafka.event.UserSettingsUpdatedPayload;
 import sit.tuvarna.bg.userservice.user.model.User;
 import sit.tuvarna.bg.userservice.user.repository.UserRepository;
 import sit.tuvarna.bg.userservice.userSettings.model.TwoFactorMethod;
@@ -20,12 +23,14 @@ public class UserSettingsService {
     private final UserSettingsRepository userSettingsRepository;
     private final UserRepository userRepository;
     private final EncryptionService encryptionService;
+    private final UserEventPublisher eventPublisher;
 
     @Autowired
-    public UserSettingsService(UserSettingsRepository userSettingsRepository, UserRepository userRepository, EncryptionService encryptionService) {
+    public UserSettingsService(UserSettingsRepository userSettingsRepository, UserRepository userRepository, EncryptionService encryptionService, UserEventPublisher eventPublisher) {
         this.userSettingsRepository = userSettingsRepository;
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Loggable
@@ -39,31 +44,46 @@ public class UserSettingsService {
         if (request.getInternalNotificationsEnabled() != null)
             settings.setInternalNotificationEnabled(request.getInternalNotificationsEnabled());
 
-        if (request.getTwoFactorEnabled() != null)
-            settings.setTwoFactorEnabled(request.getTwoFactorEnabled());
-
-        if (request.getTwoFactorMethod() != null)
-            settings.setTwoFactorMethod(request.getTwoFactorMethod());
+        // 2FA state is NOT mutable here. Enabling must go through /2fa/setup → /2fa/verify
+        // (enableTwoFactor, which requires a valid TOTP code). Allowing it via this
+        // unauthenticated-by-TOTP settings PUT would let a user enable 2FA with no secret
+        // stored (locking themselves out) or silently disable it. See storeTwoFactorSecret.
 
         userSettingsRepository.save(settings);
+
+        eventPublisher.publish(
+                "user.settings-updated",
+                userId.toString(),
+                new UserSettingsUpdatedPayload(
+                        userId,
+                        settings.isEmailNotificationEnabled(),
+                        settings.isInternalNotificationEnabled(),
+                        settings.isTwoFactorEnabled()
+                ));
+
         return toResponse(settings);
     }
     @Loggable
+    @Transactional
     public void storeTwoFactorSecret(UUID userId, String rawSecret) {
+        String encrypted = encryptionService.encrypt(rawSecret);
+
+        // @Transactional makes this read-modify-write atomic (was 3 separate tx).
+        // True protection against concurrent same-user setup is the frontend guard
+        // in TwoFASetupPage; here a single call is now clean.
         UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultSettings(userId));
 
-        String encrypted = encryptionService.encrypt(rawSecret);
-
         settings.setTwoFactorSecret(encrypted);
         settings.setTwoFactorMethod(TwoFactorMethod.TOTP);
-        settings.setTwoFactorEnabled(true);
+        // NOT enabled here — only after the user proves a valid TOTP code via /2fa/verify
+        // (enableTwoFactor). Enabling at setup time would lock out users who abandon setup.
 
         userSettingsRepository.save(settings);
     }
     @Loggable
     public UserSettingsResponse getSettings(UUID userId){
-        UserSettings settings = userSettingsRepository.findById(userId)
+        UserSettings settings = userSettingsRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultSettings(userId));
         return toResponse(settings);
     }
